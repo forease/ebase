@@ -23,6 +23,7 @@ var (
 	Log        *BaseLog
 	Config     *config.Config
 	SigHandler = make(map[string]interface{}) //
+	G          = make(map[string]interface{}) //
 
 	// 定义命令行参数
 	verbose = flag.Bool("v", false, "Verbose output")
@@ -56,6 +57,7 @@ func init() {
 			fmt.Printf("I'll Chroot to %s !\n", pwd)
 		}
 	}
+
 	CreatePid()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())

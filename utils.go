@@ -22,25 +22,26 @@ func webTime(t time.Time) string {
 	return ftime
 }
 
+// encode md5
 func Md5(key string) string {
 	h := md5.New()
 	h.Write([]byte(key))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+// string to uint
 func GetStrUint(d string) uint {
 	a, _ := strconv.Atoi(d)
 	return uint(a)
 }
 
+// string to int
 func GetStrInt(d string) int {
 	a, _ := strconv.Atoi(d)
 	return a
 }
 
-/**
- * 将字符串转换成 uint64 位数字
- */
+// string to uint64
 func GetStrUint64(d string) uint64 {
 	if d == "" {
 		return uint64(0)
@@ -55,6 +56,7 @@ func GetStrUint64(d string) uint64 {
 	return ret
 }
 
+// string to int64
 func GetStrInt64(d string) int64 {
 	if d == "" {
 		return int64(0)
@@ -69,6 +71,7 @@ func GetStrInt64(d string) int64 {
 	return ret
 }
 
+// string to float64
 func GetStrFloat64(s string) float64 {
 	if s == "" {
 		return float64(0)
@@ -84,26 +87,28 @@ func GetStrFloat64(s string) float64 {
 
 }
 
-/**
- * 将字符串转换成 uint32 位数字
- */
+// string to uint32
 func GetStrUint32(d string) uint32 {
 	a, _ := strconv.Atoi(d)
 	return uint32(a)
 }
 
+// uint64 to string
 func GetUint64Str(d uint64) string {
 	return strconv.FormatUint(d, 10)
 }
 
+// int64 to string
 func GetInt64Str(d int64) string {
 	return strconv.FormatInt(d, 10)
 }
 
+// uint to string
 func GetUintStr(d uint) string {
 	return strconv.Itoa(int(d))
 }
 
+// int to string
 func GetIntStr(d int) string {
 	return strconv.Itoa(d)
 }
@@ -131,4 +136,14 @@ func GetTimeAgo(t int64) (s string) {
 	}
 
 	return
+}
+
+// int slice to string
+func GetIntArrToStr(i []int, d string) (s string) {
+	var ss []string
+	for _, v := range i {
+		ss = append(ss, GetIntStr(v))
+	}
+
+	return strings.Join(ss, d)
 }
