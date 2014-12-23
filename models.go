@@ -85,8 +85,7 @@ func NewXorm() (orm *xorm.Engine, err error) {
 			dbProto, dbHost, dbPort, dbName)
 	case "postgres":
 		dsn = fmt.Sprintf("dbname=%s host=%s user=%s password=%s port=%d sslmode=%s",
-			dbName, dbHost, dbUser, dbPassword,
-			dbPort, dbSsl)
+			dbName, dbHost, dbUser, dbPassword, dbPort, dbSsl)
 	case "sqlite3":
 		dsn = dbPath + dbName
 	default:

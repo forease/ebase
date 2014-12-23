@@ -1,9 +1,10 @@
-/**
- * Ebase frame for daemon program
- * Author Jonsen Yang
- * Date 2013-07-05
- * Copyright (c) 2013 ForEase Times Technology Co., Ltd. All rights reserved.
- */
+//
+// Ebase frame for daemon program
+// Author Jonsen Yang
+// Date 2013-07-05
+// Copyright (c) 2013 ForEase Times Technology Co., Ltd. All rights reserved.
+//
+
 package ebase
 
 import (

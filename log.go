@@ -1,9 +1,9 @@
-/**
- * Ebase frame for daemon program
- * Author Jonsen Yang
- * Date 2013-07-05
- * Copyright (c) 2013 ForEase Times Technology Co., Ltd. All rights reserved.
- */
+//
+// Ebase frame for daemon program
+// Author Jonsen Yang
+// Date 2013-07-05
+// Copyright (c) 2013 ForEase Times Technology Co., Ltd. All rights reserved.
+//
 package ebase
 
 import (
@@ -32,16 +32,17 @@ type BaseLog struct {
 }
 
 type LogOptions struct {
-	Type   string
-	File   string
-	Level  int
-	Flag   int
+	Type   string // log type: consloe, file, system
+	File   string // log file, need type is file
+	Level  int    // output log level
+	Flag   int    // log flag
 	Enable bool
 }
 
-// 初始化日志
-// 创建一个goroutine来专门记录日志
-// 需要写日志时，通过chan传递
+// New log
+// example:
+// 	opt := &LogOptions{Type: logType, File: logFile, Level: logLevel, Flag: logFlag}
+//	log := NewLog(opt)
 func NewLog(opt *LogOptions) (l *BaseLog) {
 	var loger *log.Logger
 

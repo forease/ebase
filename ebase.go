@@ -1,9 +1,9 @@
-/**
- * Ebase frame for daemon program
- * Author Jonsen Yang
- * Date 2013-07-05
- * Copyright (c) 2013 ForEase Times Technology Co., Ltd. All rights reserved.
- */
+//
+// Ebase frame for daemon program
+// Author Jonsen Yang
+// Date 2013-07-05
+// Copyright (c) 2013 ForEase Times Technology Co., Ltd. All rights reserved.
+//
 package ebase
 
 import (
@@ -63,20 +63,20 @@ func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	Config = LoadConfig("")
-	Log = SetupLog()
+	Log = defaultLog()
 
 	SigHandler["sighup"] = func() {
 		Log.Debug("reload config")
 		Config = LoadConfig("")
 	}
 
-	go SignalHandle(SigHandler)
+	//
+	if ok, _ := Config.Bool("sys.signal", false); ok {
+		go SignalHandle(SigHandler)
+	}
 }
 
-// 初始化 cfg 变量
-// var cfg sysCfg
 func LoadConfig(configFile string) (cfg *config.Config) {
-	// 初始化读取配置文件
 	var err error
 	if configFile == "" {
 		if *cfgfile != "" {
@@ -95,7 +95,7 @@ func LoadConfig(configFile string) (cfg *config.Config) {
 	return cfg
 }
 
-func SetupLog() (l *BaseLog) {
+func defaultLog() (l *BaseLog) {
 
 	logType, _ := Config.String("log.type", "consloe")
 	logFile, _ := Config.String("log.file", "")
@@ -106,44 +106,43 @@ func SetupLog() (l *BaseLog) {
 	return NewLog(opt)
 }
 
+//
 func SignalHandle(funcs map[string]interface{}) {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGHUP)
+
 	for {
-		ch := make(chan os.Signal)
-
-		signal.Notify(ch, syscall.SIGINT, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGHUP)
-		sig := <-ch
-
-		Log.Debugf("Signal received: %v", sig)
-
-		switch sig {
-		default:
-		case syscall.SIGHUP:
-			if f, ok := funcs["sighup"]; ok {
-				if ff := reflect.ValueOf(f); ff.Kind() == reflect.Func {
-					ff.Call(nil)
+		select {
+		case s := <-ch:
+			switch s {
+			default:
+			case syscall.SIGHUP:
+				if f, ok := funcs["sighup"]; ok {
+					if ff := reflect.ValueOf(f); ff.Kind() == reflect.Func {
+						ff.Call(nil)
+					}
+				}
+				break
+			case syscall.SIGINT:
+				if f, ok := funcs["sigint"]; ok {
+					if ff := reflect.ValueOf(f); ff.Kind() == reflect.Func {
+						ff.Call(nil)
+					}
+				}
+				os.Exit(1)
+			case syscall.SIGUSR1:
+				if f, ok := funcs["sigusr1"]; ok {
+					if ff := reflect.ValueOf(f); ff.Kind() == reflect.Func {
+						ff.Call(nil)
+					}
+				}
+			case syscall.SIGUSR2:
+				if f, ok := funcs["sigusr2"]; ok {
+					if ff := reflect.ValueOf(f); ff.Kind() == reflect.Func {
+						ff.Call(nil)
+					}
 				}
 			}
-			break
-		case syscall.SIGINT:
-			if f, ok := funcs["sigint"]; ok {
-				if ff := reflect.ValueOf(f); ff.Kind() == reflect.Func {
-					ff.Call(nil)
-				}
-			}
-			os.Exit(1)
-		case syscall.SIGUSR1:
-			if f, ok := funcs["sigusr1"]; ok {
-				if ff := reflect.ValueOf(f); ff.Kind() == reflect.Func {
-					ff.Call(nil)
-				}
-			}
-		case syscall.SIGUSR2:
-			if f, ok := funcs["sigusr2"]; ok {
-				if ff := reflect.ValueOf(f); ff.Kind() == reflect.Func {
-					ff.Call(nil)
-				}
-			}
-
 		}
 	}
 }
