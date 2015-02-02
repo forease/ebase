@@ -62,7 +62,7 @@ type (
 
 // 从默认配置加载数据库
 
-func NewDefaultModels() (*Models, error) {
+func NewDefaultModels() (dbh *Models, err error) {
 	dbDriver, _ := Config.String("database.driver", "postgres")
 	dbProto, _ := Config.String("database.proto", "tcp")
 	dbHost, _ := Config.String("database.host", "localhost")
@@ -104,7 +104,12 @@ func NewDefaultModels() (*Models, error) {
 	opt.Redis.Db = redisDb
 	opt.Redis.Prefix = redisKeyFix
 
-	return NewModels(opt)
+	dbh, err = NewModels(opt)
+	if err == nil {
+		Dbh = dbh
+	}
+
+	return
 }
 
 //
@@ -114,22 +119,23 @@ func NewModels(opt *ModelOption) (*Models, error) {
 		return nil, err
 	}
 
-	Dbh = new(Models)
-	Dbh.Orm = orm
+	dbh := new(Models)
+	dbh.Orm = orm
 
 	if opt.Redis.Enable {
 		redis, err := NewRedis(&opt.Redis)
 		if err != nil {
+			orm.Close()
 			return nil, err
 		}
-		Dbh.OrmCache = opt.Orm.Cache
-		Dbh.OrmCacheTime = int64(opt.Orm.CacheTime)
-		Dbh.RedisEnable = true
+		dbh.OrmCache = opt.Orm.Cache
+		dbh.OrmCacheTime = int64(opt.Orm.CacheTime)
+		dbh.RedisEnable = true
 
-		Dbh.Redis = redis
+		dbh.Redis = redis
 	}
 
-	return Dbh, nil
+	return dbh, nil
 }
 
 func (dbh *Models) Close() error {
