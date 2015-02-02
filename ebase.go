@@ -165,6 +165,12 @@ func CreatePid() {
 			pidf = "/var/run/" + path.Base(os.Args[0]) + ".pid"
 		}
 	}
+
+	if pidf == "" {
+		fmt.Println("pid file not setup")
+		os.Exit(1)
+	}
+
 	f, err := os.OpenFile(pidf, os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println("Open pid file err ", err)
