@@ -14,60 +14,55 @@ import (
 
 var Dbh *Models
 
-type Redis struct {
-	redis.Client
-	RedisPrefix string
-}
-
-type Models struct {
-	Orm          *xorm.Engine
-	OrmCache     bool
-	OrmCacheTime int64
-	Redis        *Redis
-	RedisEnable  bool
-	RedisPrefix  string
-	Driver       string
-}
-
-func NewModels() (*Models, error) {
-	orm, err := NewXorm()
-	if err != nil {
-		return nil, err
+type (
+	Redis struct {
+		redis.Client
+		RedisPrefix string
 	}
 
-	Dbh = new(Models)
-	Dbh.Orm = orm
-
-	redisEnable, _ := Config.Bool("redis.enable", false)
-	if redisEnable {
-		redis, err := NewRedis()
-		if err != nil {
-			return nil, err
-		}
-		dbCache, _ := Config.Bool("database.cache", false)
-		dbCacheTime, _ := Config.Int("database.cachetime", 300)
-		Dbh.OrmCache = dbCache
-		Dbh.OrmCacheTime = int64(dbCacheTime)
-		Dbh.RedisEnable = true
-
-		Dbh.Redis = redis
-
+	Models struct {
+		Orm          *xorm.Engine
+		OrmCache     bool
+		OrmCacheTime int64
+		Redis        *Redis
+		RedisEnable  bool
+		RedisPrefix  string
+		Driver       string
 	}
 
-	return Dbh, nil
-}
+	ModelOption struct {
+		Orm   OrmOption
+		Redis RedisOption
+	}
 
-func (dbh *Models) Close() error {
+	OrmOption struct {
+		Driver    string
+		Proto     string
+		Host      string
+		User      string
+		Password  string
+		Name      string
+		Ssl       string
+		Path      string
+		Port      int
+		CacheTime int
+		Cache     bool
+		Debug     bool
+	}
 
-	dbh.Orm.Close()
-	dbh.Redis.Quit()
+	RedisOption struct {
+		Host   string
+		Auth   string
+		Prefix string
+		Port   int
+		Db     int
+		Enable bool
+	}
+)
 
-	return nil
-}
+// 从默认配置加载数据库
 
-func NewXorm() (orm *xorm.Engine, err error) {
-	Log.Info("db initializing...")
-	var dsn string
+func NewDefaultModels() (*Models, error) {
 	dbDriver, _ := Config.String("database.driver", "postgres")
 	dbProto, _ := Config.String("database.proto", "tcp")
 	dbHost, _ := Config.String("database.host", "localhost")
@@ -78,56 +73,122 @@ func NewXorm() (orm *xorm.Engine, err error) {
 	dbPath, _ := Config.String("database.path", "")
 	dbPort, _ := Config.Int("database.port", 5432)
 	dbDebug, _ := Config.Bool("database.debug", false)
+	dbCache, _ := Config.Bool("database.cache", false)
+	dbCacheTime, _ := Config.Int("database.cachetime", 300)
 
-	switch dbDriver {
-	case "mysql":
-		dsn = fmt.Sprintf("%s:%s@%s(%s:%d)/%s?charset=utf8", dbUser, dbPassword,
-			dbProto, dbHost, dbPort, dbName)
-	case "postgres":
-		dsn = fmt.Sprintf("dbname=%s host=%s user=%s password=%s port=%d sslmode=%s",
-			dbName, dbHost, dbUser, dbPassword, dbPort, dbSsl)
-	case "sqlite3":
-		dsn = dbPath + dbName
-	default:
-		return nil, errors.New("Unspport Database Driver")
-	}
-
-	orm, err = xorm.NewEngine(dbDriver, dsn)
-	if err != nil {
-		Log.Panic("NewEngine", err)
-	}
-
-	orm.TZLocation = time.Local
-	orm.ShowSQL = dbDebug
-	//orm.Logger = xorm.NewSimpleLogger(Log.Loger)
-	return orm, nil
-}
-
-func NewRedis() (*Redis, error) {
-	//redisEnable, _ := Config.Bool("redis.enable", false)
+	redisEnable, _ := Config.Bool("redis.enable", false)
 	redisHost, _ := Config.String("redis.host", "localhost")
 	redisAuth, _ := Config.String("redis.auth", "")
 	redisPort, _ := Config.Int("redis.port", 6379)
 	redisDb, _ := Config.Int("redis.db", 0)
 	redisKeyFix, _ := Config.String("redis.keyprefix", "ebase")
 
-	spec := redis.DefaultSpec().Db(redisDb)
+	opt := new(ModelOption)
+	opt.Orm.Driver = dbDriver
+	opt.Orm.Host = dbHost
+	opt.Orm.Proto = dbProto
+	opt.Orm.User = dbUser
+	opt.Orm.Password = dbPassword
+	opt.Orm.Name = dbName
+	opt.Orm.Ssl = dbSsl
+	opt.Orm.Path = dbPath
+	opt.Orm.Port = dbPort
+	opt.Orm.Debug = dbDebug
+	opt.Orm.Cache = dbCache
+	opt.Orm.CacheTime = dbCacheTime
 
-	if redisHost != "" {
-		spec.Host(redisHost)
+	opt.Redis.Host = redisHost
+	opt.Redis.Enable = redisEnable
+	opt.Redis.Auth = redisAuth
+	opt.Redis.Port = redisPort
+	opt.Redis.Db = redisDb
+	opt.Redis.Prefix = redisKeyFix
+
+	return NewModels(opt)
+}
+
+//
+func NewModels(opt *ModelOption) (*Models, error) {
+	orm, err := NewXorm(&opt.Orm)
+	if err != nil {
+		return nil, err
 	}
-	if redisAuth != "" {
-		spec.Password(redisAuth)
+
+	Dbh = new(Models)
+	Dbh.Orm = orm
+
+	if opt.Redis.Enable {
+		redis, err := NewRedis(&opt.Redis)
+		if err != nil {
+			return nil, err
+		}
+		Dbh.OrmCache = opt.Orm.Cache
+		Dbh.OrmCacheTime = int64(opt.Orm.CacheTime)
+		Dbh.RedisEnable = true
+
+		Dbh.Redis = redis
 	}
-	if redisPort > 0 && redisPort < 65535 {
-		spec.Port(redisPort)
+
+	return Dbh, nil
+}
+
+func (dbh *Models) Close() error {
+
+	dbh.Orm.Close()
+	if dbh.RedisEnable {
+		dbh.Redis.Quit()
+	}
+
+	return nil
+}
+
+func NewXorm(opt *OrmOption) (orm *xorm.Engine, err error) {
+	Log.Info("db initializing...")
+	var dsn string
+
+	switch opt.Driver {
+	case "mysql":
+		dsn = fmt.Sprintf("%s:%s@%s(%s:%d)/%s?charset=utf8", opt.User, opt.Password,
+			opt.Proto, opt.Host, opt.Port, opt.Name)
+	case "postgres":
+		dsn = fmt.Sprintf("dbname=%s host=%s user=%s password=%s port=%d sslmode=%s",
+			opt.Name, opt.Host, opt.User, opt.Password, opt.Port, opt.Ssl)
+	case "sqlite3":
+		dsn = opt.Path + opt.Name
+	default:
+		return nil, errors.New("Unspport Database Driver")
+	}
+
+	orm, err = xorm.NewEngine(opt.Driver, dsn)
+	if err != nil {
+		Log.Panic("NewEngine", err)
+	}
+
+	orm.TZLocation = time.Local
+	orm.ShowSQL = opt.Debug
+	//orm.Logger = xorm.NewSimpleLogger(Log.Loger)
+	return orm, nil
+}
+
+func NewRedis(opt *RedisOption) (*Redis, error) {
+
+	spec := redis.DefaultSpec().Db(opt.Db)
+
+	if opt.Host != "" {
+		spec.Host(opt.Host)
+	}
+	if opt.Auth != "" {
+		spec.Password(opt.Auth)
+	}
+	if opt.Port > 0 && opt.Port < 65535 {
+		spec.Port(opt.Port)
 	}
 
 	rd, err := redis.NewSynchClientWithSpec(spec)
 	if err != nil {
 		return nil, err
 	}
-	ret := &Redis{Client: rd, RedisPrefix: redisKeyFix}
+	ret := &Redis{Client: rd, RedisPrefix: opt.Prefix}
 	return ret, nil
 }
 
