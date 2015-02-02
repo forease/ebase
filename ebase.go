@@ -58,11 +58,10 @@ func init() {
 		}
 	}
 
-	CreatePid()
-
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	Config = LoadConfig("")
+	CreatePid()
 	Log = defaultLog()
 
 	SigHandler["sighup"] = func() {
