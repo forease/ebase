@@ -112,7 +112,31 @@ func NewDefaultModels() (dbh *Models, err error) {
 	return
 }
 
+// new model
+// exmple
+//	opt := new(ModelOption)
+//	opt.Orm.Driver = dbDriver
+//	opt.Orm.Host = dbHost
+//	opt.Orm.Proto = dbProto
+//	opt.Orm.User = dbUser
+//	opt.Orm.Password = dbPassword
+//	opt.Orm.Name = dbName
+//	opt.Orm.Ssl = dbSsl
+//	opt.Orm.Path = dbPath
+//	opt.Orm.Port = dbPort
+//	opt.Orm.Debug = dbDebug
+//	opt.Orm.Cache = dbCache
+//	opt.Orm.CacheTime = dbCacheTime
 //
+//	opt.Redis.Host = redisHost
+//	opt.Redis.Enable = redisEnable
+//	opt.Redis.Auth = redisAuth
+//	opt.Redis.Port = redisPort
+//	opt.Redis.Db = redisDb
+//	opt.Redis.Prefix = redisKeyFix
+//
+//	dbh, err = NewModels(opt)
+
 func NewModels(opt *ModelOption) (*Models, error) {
 	orm, err := NewXorm(&opt.Orm)
 	if err != nil {
