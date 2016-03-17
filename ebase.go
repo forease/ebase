@@ -41,6 +41,11 @@ func init() {
 		return
 	}
 
+	if *verbose {
+		fmt.Println("version:")
+		os.Exit(0)
+	}
+
 	if *workdir != "" {
 		fmt.Println("workdir: ", *workdir, os.Args)
 		if err := syscall.Chdir(*workdir); err != nil {
@@ -83,6 +88,9 @@ func LoadConfig(configFile string) (cfg *config.Config) {
 		} else {
 			configFile = "/opt/etc/" + path.Base(os.Args[0]) + ".conf"
 		}
+	}
+	if configFile == "" {
+		return
 	}
 
 	cfg, err = config.NewConfig(configFile, 5)
