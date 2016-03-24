@@ -93,7 +93,7 @@ func LoadConfig(configFile string) (cfg *config.Config) {
 		return
 	}
 
-	cfg, err = config.NewConfig(configFile, 5)
+	cfg, err = config.NewConfig(configFile, 16)
 	if err != nil {
 		fmt.Println("read config file error: ", err)
 		os.Exit(1)
