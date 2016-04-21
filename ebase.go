@@ -34,7 +34,7 @@ var (
 	pidfile = flag.String("p", "", "Pid file")
 )
 
-func init() {
+func EbaseInit() {
 	flag.Parse()
 	if *help {
 		Help()
