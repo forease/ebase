@@ -86,11 +86,23 @@ func LoadConfig(configFile string) (cfg *config.Config) {
 		if *cfgfile != "" {
 			configFile = *cfgfile
 		} else {
-			configFile = "/opt/etc/" + path.Base(os.Args[0]) + ".conf"
+			files := []string{
+				path.Base(os.Args[0]) + ".conf",
+				"./etc/" + path.Base(os.Args[0]) + ".conf",
+				"/opt/etc/" + path.Base(os.Args[0]) + ".conf",
+			}
+
+			for _, ff := range files {
+				if _, err := os.Stat(ff); err == nil {
+					configFile = ff
+					break
+				}
+			}
 		}
 	}
 	if configFile == "" {
-		return
+		fmt.Println("config file not found!")
+		os.Exit(1)
 	}
 
 	cfg, err = config.NewConfig(configFile, 16)
