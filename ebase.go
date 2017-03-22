@@ -119,7 +119,7 @@ func defaultLog() (l *BaseLog) {
 	logType, _ := Config.String("log.type", "consloe")
 	logFile, _ := Config.String("log.file", "")
 	logLevel, _ := Config.Int("log.level", 5)
-	logFlag, _ := Config.Int("log.flag", 9)
+	logFlag, _ := Config.Int("log.flag", 19)
 	//logEnable, _ = Config.Bool("log.enable", true)
 	opt := &LogOptions{Type: logType, File: logFile, Level: logLevel, Flag: logFlag}
 	return NewLog(opt)
