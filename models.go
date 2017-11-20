@@ -179,7 +179,7 @@ func (dbh *Models) Close() error {
 }
 
 func NewXorm(opt *OrmOption) (orm *xorm.Engine, err error) {
-	Log.Info("db initializing...")
+	Log.Trace("db initializing...")
 	var dsn string
 
 	switch opt.Driver {
