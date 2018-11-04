@@ -9,13 +9,14 @@ package ebase
 import (
 	"flag"
 	"fmt"
-	"github.com/forease/config"
 	"os"
 	"os/signal"
 	"path"
 	"reflect"
 	"runtime"
 	"syscall"
+
+	"github.com/forease/config"
 )
 
 var (
@@ -32,6 +33,8 @@ var (
 	cfgfile = flag.String("c", "", "Config file")
 	workdir = flag.String("d", "", "Setup work dir")
 	pidfile = flag.String("p", "", "Pid file")
+
+	AppName = path.Base(os.Args[0])
 )
 
 func EbaseInit() {
@@ -69,15 +72,16 @@ func EbaseInit() {
 	CreatePid()
 	Log = defaultLog()
 
-	SigHandler["sighup"] = func() {
-		Log.Debug("reload config")
-		Config = LoadConfig("")
-	}
+	/*
+		SigHandler["sighup"] = func() {
+			Log.Debug("reload config")
+			Config = LoadConfig("")
+		}
 
-	//
-	if ok, _ := Config.Bool("sys.signal", false); ok {
-		go SignalHandle(SigHandler)
-	}
+			if ok, _ := Config.Bool("sys.signal", false); ok {
+				go SignalHandle(SigHandler)
+			}
+	*/
 }
 
 func LoadConfig(configFile string) (cfg *config.Config) {
@@ -87,9 +91,10 @@ func LoadConfig(configFile string) (cfg *config.Config) {
 			configFile = *cfgfile
 		} else {
 			files := []string{
-				path.Base(os.Args[0]) + ".conf",
-				"./etc/" + path.Base(os.Args[0]) + ".conf",
-				"/opt/etc/" + path.Base(os.Args[0]) + ".conf",
+				AppName + ".conf",
+				"./etc/" + AppName + ".conf",
+				"/var/etc/" + AppName + ".conf",
+				"/opt/etc/" + AppName + ".conf",
 			}
 
 			for _, ff := range files {
@@ -181,7 +186,7 @@ func CreatePid() {
 	} else {
 		pidf, _ = Config.String("sys.pid", "")
 		if pidf == "" {
-			pidf = "/var/run/" + path.Base(os.Args[0]) + ".pid"
+			pidf = "/var/run/" + AppName + ".pid"
 		}
 	}
 
@@ -265,10 +270,10 @@ func Help() {
 	fmt.Printf(
 		"\nUseage: %s [ Options ]\n\n"+
 			"Options:\n"+
-			"  -c Server config file [Default: etc/serverd.conf]\n"+
+			"  -c Server config file [Default: etc/"+AppName+".conf]\n"+
 			"  -d Work dir [Default: publish]\n"+
 			"  -h Display this mssage\n"+
-			"  -p Pid file [Default: var/serverd.pid]\n"+
+			"  -p Pid file [Default: var/"+AppName+".pid]\n"+
 			"  -w Enable chroot to work dir [Required: -d ]\n\n"+
 			"------------------------------------------------------\n\n"+
 			"  Author:  16hot (im16hot@gmail.com) \n"+

@@ -2,6 +2,7 @@ package ebase
 
 import (
 	"net"
+	"net/http"
 	"reflect"
 	"strings"
 )
@@ -46,4 +47,10 @@ func (clients AuthClients) ClientAuthor(ipAddr net.IP) bool {
 	}
 
 	return false
+}
+
+func GetHost(req *http.Request) string {
+	host, _, _ := net.SplitHostPort(req.RemoteAddr)
+
+	return host
 }
