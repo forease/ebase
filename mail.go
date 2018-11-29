@@ -69,7 +69,15 @@ func (s *Smtp) MailSendServer() {
 
 }
 
-func (s *Smtp) MailSender(subject, content, to, cc, bcc string) (err error) {
+func (s *Smtp) MailSender(subject, content, to, args ...string) (err error) {
+	var cc, bcc string
+	argLen := len(args)
+	if argLen == 1 {
+		cc = args[0]
+	}
+	if argLeg == 2 {
+		bcc = args[1]
+	}
 
 	if subject != "" && content != "" && to != "" {
 		m := &Mailer{Subject: subject, Content: content, To: to, Cc: cc, Bcc: bcc}
