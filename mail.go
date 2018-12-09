@@ -69,13 +69,13 @@ func (s *Smtp) MailSendServer() {
 
 }
 
-func (s *Smtp) MailSender(subject, content, to, args ...string) (err error) {
+func (s *Smtp) MailSender(subject, content, to string, args ...string) (err error) {
 	var cc, bcc string
 	argLen := len(args)
 	if argLen == 1 {
 		cc = args[0]
 	}
-	if argLeg == 2 {
+	if argLen == 2 {
 		bcc = args[1]
 	}
 
