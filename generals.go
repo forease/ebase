@@ -12,13 +12,13 @@ type KeyValue struct {
 	Value interface{}
 }
 
-type Generals map[string]interface{}
+type Map map[string]interface{}
 
-func NewSettings() Generals {
-	return Generals{}
+func NewMap() Map {
+	return Map{}
 }
 
-func (set Generals) Get(name string, value interface{}) (err error) {
+func (set Map) Get(name string, value interface{}) (err error) {
 	tmp, ok := set[name]
 	if !ok {
 		return fmt.Errorf("keys not found.[%s]", name)
