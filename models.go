@@ -9,6 +9,7 @@ import (
 	"github.com/go-xorm/xorm"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	"os"
 	"time"
 )
 
@@ -44,6 +45,7 @@ type (
 		Name      string
 		Ssl       string
 		Path      string
+		Log       string
 		Port      int
 		CacheTime int
 		Cache     bool
@@ -81,6 +83,7 @@ func NewDefaultModels() (dbh *Models, err error) {
 	dbDebug, _ := Config.Bool("database.debug", false)
 	dbCache, _ := Config.Bool("database.cache", false)
 	dbCacheTime, _ := Config.Int("database.cachetime", 300)
+	dbLogFile, _ := Config.String("database.log", "var/database.log")
 
 	redisEnable, _ := Config.Bool("redis.enable", false)
 	redisHost, _ := Config.String("redis.host", "localhost")
@@ -102,6 +105,7 @@ func NewDefaultModels() (dbh *Models, err error) {
 	opt.Orm.Debug = dbDebug
 	opt.Orm.Cache = dbCache
 	opt.Orm.CacheTime = dbCacheTime
+	opt.Orm.Log = dbLogFile
 
 	opt.Redis.Host = redisHost
 	opt.Redis.Enable = redisEnable
@@ -203,6 +207,17 @@ func NewXorm(opt *OrmOption) (orm *xorm.Engine, err error) {
 	orm.TZLocation = time.Local
 	//orm.ShowSQL = opt.Debug
 	//orm.Logger = xorm.NewSimpleLogger(Log.Loger)
+	if opt.Debug {
+		f, err := os.Create(opt.Log)
+		if err != nil {
+			println(err.Error())
+			return orm, err
+		}
+		orm.Logger().SetLevel(5)
+		logger := xorm.NewSimpleLogger(f)
+		logger.ShowSQL(true)
+		orm.SetLogger(logger)
+	}
 	return orm, nil
 }
 

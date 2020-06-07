@@ -18,6 +18,17 @@ func NewMap() Map {
 	return Map{}
 }
 
+func (set Map) String() (str string) {
+	js, err := json.Marshal(&set)
+	if err != nil || js == nil || string(js) == "null" {
+		str = "{}"
+	} else {
+		str = string(js)
+	}
+
+	return
+}
+
 func (set Map) Get(name string, value interface{}) (err error) {
 	tmp, ok := set[name]
 	if !ok {
