@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	redis "github.com/alphazero/Go-Redis"
-	_ "github.com/go-sql-driver/mysql"
-	"xorm.io/xorm"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"time"
+
+	redis "github.com/alphazero/Go-Redis"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
+	"xorm.io/xorm"
+	"xorm.io/xorm/log"
 )
 
 var Dbh *Models
@@ -45,6 +47,7 @@ type (
 		Name      string
 		Ssl       string
 		Path      string
+		Schema    string
 		Log       string
 		Port      int
 		CacheTime int
@@ -79,6 +82,7 @@ func NewDefaultModels() (dbh *Models, err error) {
 	dbName, _ := Config.String("database.name", "")
 	dbSsl, _ := Config.String("database.ssl", "")
 	dbPath, _ := Config.String("database.path", "")
+	dbSchema, _ := Config.String("database.schema", "public")
 	dbPort, _ := Config.Int("database.port", 5432)
 	dbDebug, _ := Config.Bool("database.debug", false)
 	dbCache, _ := Config.Bool("database.cache", false)
@@ -101,6 +105,7 @@ func NewDefaultModels() (dbh *Models, err error) {
 	opt.Orm.Name = dbName
 	opt.Orm.Ssl = dbSsl
 	opt.Orm.Path = dbPath
+	opt.Orm.Schema = dbSchema
 	opt.Orm.Port = dbPort
 	opt.Orm.Debug = dbDebug
 	opt.Orm.Cache = dbCache
@@ -204,6 +209,11 @@ func NewXorm(opt *OrmOption) (orm *xorm.Engine, err error) {
 		Log.Panic("NewEngine", err)
 	}
 
+	// set schema
+	if opt.Driver == "postgres" && opt.Schema != "public" {
+		orm.SetSchema(opt.Schema)
+	}
+
 	orm.TZLocation = time.Local
 	//orm.ShowSQL = opt.Debug
 	//orm.Logger = xorm.NewSimpleLogger(Log.Loger)
@@ -214,7 +224,7 @@ func NewXorm(opt *OrmOption) (orm *xorm.Engine, err error) {
 			return orm, err
 		}
 		orm.Logger().SetLevel(5)
-		logger := xorm.NewSimpleLogger(f)
+		logger := log.NewSimpleLogger(f)
 		logger.ShowSQL(true)
 		orm.SetLogger(logger)
 	}
